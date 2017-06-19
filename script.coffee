@@ -26,15 +26,16 @@ prepSprites = () ->
     #PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST
     
-    app = new PIXI.Application ASPECT_RATIO.width, ASPECT_RATIO.height, {backgroundColor : 0x000000}
+    app = new PIXI.Application ASPECT_RATIO.width, ASPECT_RATIO.height, {backgroundColor : 0xFFFFFF}
 
     document.body.appendChild app.view
     srcs = [ "boat.png", "Coney1.png",
             "Coney2.png", "Coney3.png", "hook.png", "JackRainbowFish.png",
             "LionFish.png", "MahiMahi.png", "Marlin.png", "SpottedHog.png", "WhaleShark.png",
             "day.png", "GUI.png", "sand.png", "sky.png", "water.png", "sky.png", "waves.png",
-            "Bubble.png", "Title.png", "/clouds/0.png", "/clouds/1.png", "/clouds/2.png", 
-            "/sky/0.png", "/sky/1.png", "/sky/2.png", "/sky/3.png", "/sky/4.png", "sun.png", "moon.png"]
+            "Bubble.png", "Title.png", "clouds/0.png", "clouds/1.png", "clouds/2.png", 
+            "sky/0.png", "sky/1.png", "sky/2.png", "sky/3.png", "sky/4.png", "sun.png", "moon.png",
+            "tut/0.png", "tut/1.png", "tut/2.png", "tut/3.png", "tut/4.png"]
     i = 0
     for str in srcs
         do =>
@@ -47,6 +48,7 @@ prepSprites = () ->
     
 run = () ->
     pause = false
+    tutorial = null
     gameStats = 
         fishCaught : 0
         errors : 0
@@ -165,8 +167,6 @@ run = () ->
             sun.anchor.set .5
             sun.x = ASPECT_RATIO.width / 2 - Math.cos(pos) * (ASPECT_RATIO.width / 3)
             sun.y = Background.waterLevel - 75 - Math.sin(pos) * (Background.waterLevel - 75)
-            console.log ("#{sun.x}, #{sun.y}")
-            console.log "num: #{currentLevelNum}"
             backgroundLayer.addChild(sun)
             @sky.push sun
             for i in [0... 3]
@@ -353,7 +353,73 @@ run = () ->
             @lineTool.clear()
             boatLayer.removeChild @hookSprite
             boatLayer.removeChild @boatSprite
-
+    
+    class Tutorial
+        constructor : () ->
+            @images = []
+            for i in [0...5]
+                tex = PIXI.Texture.fromImage "res/tut/#{i}.png"
+                spr = new PIXI.Sprite(tex);
+                @images.push spr
+                spr.anchor.set .5
+                spr.x = ASPECT_RATIO.width / 2
+                spr.y = ASPECT_RATIO.height / 2
+                scl = Math.min(ASPECT_RATIO.width / spr.width, ASPECT_RATIO.height / spr.height)
+                spr.scale.set(scl)
+            @show(0)
+        show : (i) ->
+            @in = false
+            guiLayer.removeChildren()
+            guiLayer.addChild @images[i]
+            
+            regStyle = new PIXI.TextStyle {
+                fontSize : 32
+                fontFamily : "'Press Start 2P', cursive"
+                fill: "#ffffff"
+                stroke: "#000000"
+                strokeThickness : 5
+            }
+            
+            bigStyle = new PIXI.TextStyle {
+                fontSize : 36
+                fontFamily : "'Press Start 2P', cursive"
+                fill: "#ffffff"
+                stroke: "#000000"
+                strokeThickness : 5
+            }
+            
+            str = if i is @images.length - 1 then "DONE" else "NEXT"
+            @nextButton = new PIXI.Text str, regStyle
+            @prevButton = if i > 0 then new PIXI.Text "PREVIOUS", regStyle else null
+            for k in [@nextButton, @prevButton]
+                k?.interactive = true
+                k?.buttonMode = true
+                k?.anchor.set .5
+                k?.y = ASPECT_RATIO.height - k.height - 15
+                guiLayer.addChild(k) if k?
+            
+            @nextButton.x = ASPECT_RATIO.width - @nextButton.width / 2 - 20
+            @prevButton.x = @prevButton.x + @prevButton.width / 2 + 20 if @prevButton?
+            
+            @nextButton.on('pointerover', () => @nextButton.style = bigStyle; (new Audio 'res/Click.mp3').play() unless @in; @in = true)
+            @nextButton.on('pointerout', () => @nextButton.style = regStyle; @in = false)
+            @nextButton.on('pointerdown', () => 
+                                            @in = true
+                                            if i < @images.length - 1
+                                                tutorial.show i + 1
+                                            else
+                                                @end()
+                                            )
+            @prevButton?.on('pointerover', () => @prevButton.style = bigStyle; (new Audio 'res/Click.mp3').play() unless @in; @in = true)
+            @prevButton?.on('pointerout', () => @prevButton.style = regStyle; @in = false)
+            @prevButton?.on('pointerdown', () => 
+                                            tutorial.show(i - 1)
+                                            @in = true
+                                            )
+        end : () ->
+            tutorial = null
+            clearScreen()
+            new TitleScreen
 
     hook = new Hook()
     relocateHook = () ->
@@ -827,6 +893,9 @@ run = () ->
                                             )
             @tutorialButton.on('pointerover', () => @tutorialButton.style = bigStyle; (new Audio 'res/Click.mp3').play())
             @tutorialButton.on('pointerout', () => @tutorialButton.style = regStyle)
+            @tutorialButton.on('pointerdown', () -> 
+                                            tutorial = new Tutorial
+                                            )
             
     class GameSummary
         levelActive = false

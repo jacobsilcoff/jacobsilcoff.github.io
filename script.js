@@ -41,10 +41,10 @@
     };
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     app = new PIXI.Application(ASPECT_RATIO.width, ASPECT_RATIO.height, {
-      backgroundColor: 0x000000
+      backgroundColor: 0xFFFFFF
     });
     document.body.appendChild(app.view);
-    srcs = ["boat.png", "Coney1.png", "Coney2.png", "Coney3.png", "hook.png", "JackRainbowFish.png", "LionFish.png", "MahiMahi.png", "Marlin.png", "SpottedHog.png", "WhaleShark.png", "day.png", "GUI.png", "sand.png", "sky.png", "water.png", "sky.png", "waves.png", "Bubble.png", "Title.png", "/clouds/0.png", "/clouds/1.png", "/clouds/2.png", "/sky/0.png", "/sky/1.png", "/sky/2.png", "/sky/3.png", "/sky/4.png", "sun.png", "moon.png"];
+    srcs = ["boat.png", "Coney1.png", "Coney2.png", "Coney3.png", "hook.png", "JackRainbowFish.png", "LionFish.png", "MahiMahi.png", "Marlin.png", "SpottedHog.png", "WhaleShark.png", "day.png", "GUI.png", "sand.png", "sky.png", "water.png", "sky.png", "waves.png", "Bubble.png", "Title.png", "clouds/0.png", "clouds/1.png", "clouds/2.png", "sky/0.png", "sky/1.png", "sky/2.png", "sky/3.png", "sky/4.png", "sun.png", "moon.png", "tut/0.png", "tut/1.png", "tut/2.png", "tut/3.png", "tut/4.png"];
     i = 0;
     results = [];
     for (j = 0, len = srcs.length; j < len; j++) {
@@ -67,8 +67,9 @@
   };
 
   run = function() {
-    var Background, Bubble, Coney1, Coney2, Coney3, DeathDisplay, Fish, GUI, GameSummary, GoalDisplay, Hook, JackRainbowFish, Level, LionFish, MahiMahi, Marlin, SpottedHog, TitleScreen, WhaleShark, addFish, angTo, background, backgroundLayer, boatLayer, bubbles, checkLevelWon, clearConsole, clearScreen, currentLevel, currentLevelNum, cutScenesLayer, displSprites, displayCatch, displayLevel, distance, fish, fishCaught, fishLayer, gameStats, gs, gui, guiLayer, hook, levelActive, loseLevel, music, nextLevel, normalizeAng, pause, pickupAudio, playThenDo, playThenDoFunction, printAng, random, relocateHook, replace, startLevel, startPlayingLevel, title, toomanyAudio, topWaveLayer, winLevel;
+    var Background, Bubble, Coney1, Coney2, Coney3, DeathDisplay, Fish, GUI, GameSummary, GoalDisplay, Hook, JackRainbowFish, Level, LionFish, MahiMahi, Marlin, SpottedHog, TitleScreen, Tutorial, WhaleShark, addFish, angTo, background, backgroundLayer, boatLayer, bubbles, checkLevelWon, clearConsole, clearScreen, currentLevel, currentLevelNum, cutScenesLayer, displSprites, displayCatch, displayLevel, distance, fish, fishCaught, fishLayer, gameStats, gs, gui, guiLayer, hook, levelActive, loseLevel, music, nextLevel, normalizeAng, pause, pickupAudio, playThenDo, playThenDoFunction, printAng, random, relocateHook, replace, startLevel, startPlayingLevel, title, toomanyAudio, topWaveLayer, tutorial, winLevel;
     pause = false;
+    tutorial = null;
     gameStats = {
       fishCaught: 0,
       errors: 0,
@@ -210,8 +211,6 @@
         sun.anchor.set(.5);
         sun.x = ASPECT_RATIO.width / 2 - Math.cos(pos) * (ASPECT_RATIO.width / 3);
         sun.y = Background.waterLevel - 75 - Math.sin(pos) * (Background.waterLevel - 75);
-        console.log(sun.x + ", " + sun.y);
-        console.log("num: " + currentLevelNum);
         backgroundLayer.addChild(sun);
         this.sky.push(sun);
         for (i = j = 0; j < 3; i = ++j) {
@@ -515,6 +514,129 @@
       };
 
       return Hook;
+
+    })();
+    Tutorial = (function() {
+      function Tutorial() {
+        var i, j, scl, spr, tex;
+        this.images = [];
+        for (i = j = 0; j < 5; i = ++j) {
+          tex = PIXI.Texture.fromImage("res/tut/" + i + ".png");
+          spr = new PIXI.Sprite(tex);
+          this.images.push(spr);
+          spr.anchor.set(.5);
+          spr.x = ASPECT_RATIO.width / 2;
+          spr.y = ASPECT_RATIO.height / 2;
+          scl = Math.min(ASPECT_RATIO.width / spr.width, ASPECT_RATIO.height / spr.height);
+          spr.scale.set(scl);
+        }
+        this.show(0);
+      }
+
+      Tutorial.prototype.show = function(i) {
+        var bigStyle, j, k, len, ref, ref1, ref2, ref3, regStyle, str;
+        this["in"] = false;
+        guiLayer.removeChildren();
+        guiLayer.addChild(this.images[i]);
+        regStyle = new PIXI.TextStyle({
+          fontSize: 32,
+          fontFamily: "'Press Start 2P', cursive",
+          fill: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 5
+        });
+        bigStyle = new PIXI.TextStyle({
+          fontSize: 36,
+          fontFamily: "'Press Start 2P', cursive",
+          fill: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 5
+        });
+        str = i === this.images.length - 1 ? "DONE" : "NEXT";
+        this.nextButton = new PIXI.Text(str, regStyle);
+        this.prevButton = i > 0 ? new PIXI.Text("PREVIOUS", regStyle) : null;
+        ref = [this.nextButton, this.prevButton];
+        for (j = 0, len = ref.length; j < len; j++) {
+          k = ref[j];
+          if (k != null) {
+            k.interactive = true;
+          }
+          if (k != null) {
+            k.buttonMode = true;
+          }
+          if (k != null) {
+            k.anchor.set(.5);
+          }
+          if (k != null) {
+            k.y = ASPECT_RATIO.height - k.height - 15;
+          }
+          if (k != null) {
+            guiLayer.addChild(k);
+          }
+        }
+        this.nextButton.x = ASPECT_RATIO.width - this.nextButton.width / 2 - 20;
+        if (this.prevButton != null) {
+          this.prevButton.x = this.prevButton.x + this.prevButton.width / 2 + 20;
+        }
+        this.nextButton.on('pointerover', (function(_this) {
+          return function() {
+            _this.nextButton.style = bigStyle;
+            if (!_this["in"]) {
+              (new Audio('res/Click.mp3')).play();
+            }
+            return _this["in"] = true;
+          };
+        })(this));
+        this.nextButton.on('pointerout', (function(_this) {
+          return function() {
+            _this.nextButton.style = regStyle;
+            return _this["in"] = false;
+          };
+        })(this));
+        this.nextButton.on('pointerdown', (function(_this) {
+          return function() {
+            _this["in"] = true;
+            if (i < _this.images.length - 1) {
+              return tutorial.show(i + 1);
+            } else {
+              return _this.end();
+            }
+          };
+        })(this));
+        if ((ref1 = this.prevButton) != null) {
+          ref1.on('pointerover', (function(_this) {
+            return function() {
+              _this.prevButton.style = bigStyle;
+              if (!_this["in"]) {
+                (new Audio('res/Click.mp3')).play();
+              }
+              return _this["in"] = true;
+            };
+          })(this));
+        }
+        if ((ref2 = this.prevButton) != null) {
+          ref2.on('pointerout', (function(_this) {
+            return function() {
+              _this.prevButton.style = regStyle;
+              return _this["in"] = false;
+            };
+          })(this));
+        }
+        return (ref3 = this.prevButton) != null ? ref3.on('pointerdown', (function(_this) {
+          return function() {
+            tutorial.show(i - 1);
+            return _this["in"] = true;
+          };
+        })(this)) : void 0;
+      };
+
+      Tutorial.prototype.end = function() {
+        tutorial = null;
+        clearScreen();
+        return new TitleScreen;
+      };
+
+      return Tutorial;
 
     })();
     hook = new Hook();
@@ -1272,6 +1394,9 @@
             return _this.tutorialButton.style = regStyle;
           };
         })(this));
+        this.tutorialButton.on('pointerdown', function() {
+          return tutorial = new Tutorial;
+        });
       }
 
       return TitleScreen;
